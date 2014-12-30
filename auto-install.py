@@ -33,7 +33,6 @@ def install_package(package_name):
 def file_to_seq(fp):
     out = []
     reader = csv.DictReader(fp,
-            delimiter=";",
             fieldnames=["package_name", "repo"])
     for row in reader:
         out.append(row)
