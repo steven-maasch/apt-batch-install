@@ -16,18 +16,18 @@ def is_root():
     return os.getuid() == 0
 
 def add_options(parser):
-    parser.add_argument("-f", "--file", dest="filename",
-                        help="", metavar="FILE")
+    parser.add_argument(nargs="+", dest="files",
+                        help="path to csv file", metavar="FILE")
 
 def add_repo(repo_url):
-    cmd = CMD_ADD_REPO.format(url=repo_url).split(" ")
+    cmd = CMD_ADD_REPO.format(url=repo_url).split()
     subprocess.check_call(cmd, stdout=FNULL, stderr=FNULL)
 
 def fetch_package_list():
     subprocess.check_call(CMD_FETCH_PACKAGES, stdout=FNULL, stderr=FNULL)
 
 def install_package(package_name):
-    cmd = CMD_INSTALL.format(package=package_name).split(" ")
+    cmd = CMD_INSTALL.format(package=package_name).split()
     subprocess.check_call(cmd, stdout=FNULL, stderr=FNULL)
 
 def file_to_seq(fp):
@@ -50,71 +50,73 @@ def main():
         print("ERROR: Please run script with root privileges.")
         return 1
 
-    with open(args.filename, "r") as fp:
-        packages = file_to_seq(fp)
+    for file_ in args.files:
 
-    num_packages = len(packages)
-    num_success = 0
+        with open(file_, "r") as fp:
+            packages = file_to_seq(fp)
 
-    print("{} -> {} Packages found.".format(args.filename, num_packages))
-    print("Start installing Packages:")
+        num_packages = len(packages)
+        num_success = 0
 
-    for i in range(num_packages):
-        package = packages[i]
-        err = False
+        print("{} -> {} Packages found.".format(file_, num_packages))
+        print("Start installing Packages:")
 
-        print("Processing Package: {:40s} {}/{}".format(
-            package["package_name"],
-            i + 1,
-            num_packages))
+        for i in range(num_packages):
+            package = packages[i]
+            err = False
 
-        if package["repo"] != "":
-            try:
-                # Add new package repo
+            print("Processing Package: {:40s} {}/{}".format(
+                package["package_name"],
+                i + 1,
+                num_packages))
+
+            if package["repo"] != "":
+                try:
+                    # Add new package repo
+                    indent(2)
+                    sys.stdout.write("Add Repo: {}".format(package["repo"]))
+                    add_repo(package["repo"])
+                    sys.stdout.write(" -> ")
+                    sys.stdout.write("OK")
+                    sys.stdout.write("\n")
+
+                    # Update package list
+                    indent(2)
+                    sys.stdout.write("Update Package List")
+                    fetch_package_list()
+                    sys.stdout.write(" -> ")
+                    sys.stdout.write("OK")
+                    sys.stdout.write("\n")
+                except CalledProcessError:
+                    err = True
+                    sys.stdout.write(" -> ")
+                    sys.stdout.write("ERROR")
+                    sys.stdout.write("\n")
+                sys.stdout.flush()
+
+            # Install package
+            if not err:
                 indent(2)
-                sys.stdout.write("Add Repo: {}".format(package["repo"]))
-                add_repo(package["repo"])
-                sys.stdout.write(" -> ")
-                sys.stdout.write("OK")
+                sys.stdout.write("Installing")
+                try:
+                    install_package(package["package_name"])
+                    sys.stdout.write(" -> ")
+                    sys.stdout.write("OK")
+                    num_success += 1
+                except CalledProcessError:
+                    sys.stdout.write(" -> ")
+                    sys.stdout.write("ERROR")
                 sys.stdout.write("\n")
+                sys.stdout.flush()
 
-                # Update package list
-                indent(2)
-                sys.stdout.write("Update Package List")
-                fetch_package_list()
-                sys.stdout.write(" -> ")
-                sys.stdout.write("OK")
-                sys.stdout.write("\n")
-            except CalledProcessError:
-                err = True
-                sys.stdout.write(" -> ")
-                sys.stdout.write("ERROR")
-                sys.stdout.write("\n")
-            sys.stdout.flush()
-
-        # Install new package
-        if not err:
-            indent(2)
-            sys.stdout.write("Installing")
-            try:
-                install_package(package["package_name"])
-                sys.stdout.write(" -> ")
-                sys.stdout.write("OK")
-                num_success += 1
-            except CalledProcessError:
-                sys.stdout.write(" -> ")
-                sys.stdout.write("ERROR")
-            sys.stdout.write("\n")
-            sys.stdout.flush()
-
-    print("")
-    print("Complete!")
-    print("")
-    print("Summary:")
-    indent(2)
-    print("Installed: {} Package(s)".format(num_success))
-    indent(2)
-    print("Not Installed: {} Package(s)".format(num_packages - num_success))
+        print("")
+        print("Complete!")
+        print("")
+        print("Summary:")
+        indent(2)
+        print("Installed: {} Package(s)".format(num_success))
+        indent(2)
+        print("Not Installed: {} Package(s)".format(num_packages - num_success))
 
     return 0
 
