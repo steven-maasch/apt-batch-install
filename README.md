@@ -1,4 +1,4 @@
-auto-install
+apt-batch-install
 ============
 
 Python script that batch installs apt-packages based on csv file(s).
