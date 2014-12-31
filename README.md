@@ -8,7 +8,7 @@ Python script that batch installs apt-packages based on csv file(s).
 ```bash
 $ sudo ./auto-install.py packages.csv
 ```
-The CSV-File contains the following package information:
+The CSV-File contains the following information:
 + Column 1 : Package Name
 + Column 2 : Repository-URL (PPA)
 
