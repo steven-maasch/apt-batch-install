@@ -1,10 +1,19 @@
 auto-install
 ============
 
-Python script that automatic installs apt-packages from a csv file.
+Python script that batch installs apt-packages based on csv file(s).
 
 ##### Usage
 
 ```bash
-sudo ./auto-install.py -f packages.csv
+$ sudo ./auto-install.py packages.csv
 ```
+The CSV-File contains the following information:
++ Column 1 : Package Name
++ Column 2 : Repository-URL (PPA)
+
+The Repository-URL may be omitted.
+
+##### Requirements
+
++ Python 3
