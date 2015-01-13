@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use feature 'say';
 use Getopt::Long;
 use File::Basename;
 use Text::CSV;
@@ -25,20 +26,31 @@ sub get_num_lines() {
 	my %args = @_;
 	my $file = $args{file} || die 'file=> parameter requierd';
 	my $wc_out = qx(wc -l < $file); # line number without filename
-	$wc_out =~ /(\d{1,})/;
+	$wc_out =~ /(^\d{1,})/; 
 	return $1;
 }
 
+sub install_package() {
+	my %args = @_;
+	my $package= $args{package} || die 'package=> parameter requierd';
+	my $cmd_install = qx(apt-get install -y $package);
+}
+	
+	
 sub main {
 
 	GetOptions("file=s" => \$csv_file, "exclude=s{1,}" => \@exclude);
 
-	print "Start installing packages from $csv_file\n";
+	say "Start installing packages from $csv_file";
+	
 	my $num_lines = &get_num_lines(file=>$csv_file);
-	print "Found $num_lines package entries in file\n";
+	say "Found $num_lines package(s) in file";
+	my $num_excludes = @exclude;
+	say "Exclude $num_excludes package(s): " . join(", ", @exclude);
 
 	my @packages;
-	my $csv = Text::CSV->new({ binary => 1 }) or die "Can't use CSV: " . Text::CSV->error_diag();
+	my $csv = Text::CSV->new({ binary => 1 }) or 
+		die "Can't use CSV: " . Text::CSV->error_diag();
 
 	open my $fh, "<:encoding(utf8)", "test.csv" or die "test.csv: $!";
 	while (my $row = $csv->getline($fh)) {
@@ -56,8 +68,13 @@ sub main {
 	$csv->eof or $csv->error_dialog();
 	close $fh;
 	
-	my $cmd_install = qx(apt-get install -y arj);
-	##system($cmd_install);
+	
+	for (@packages) {
+		my $p_name = $_->{name};
+		say "Processing package: $p_name";
+		&install_package(package=>$p_name);
+	}
+
 	if ($? == -1) {
 		print "command failed: $!\n";
 	} else {
@@ -75,4 +92,3 @@ sub version {
 	print "$script version $script_version\n";
 	exit;
 }
-
