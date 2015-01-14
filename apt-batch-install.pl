@@ -3,35 +3,48 @@
 use utf8;
 use strict;
 use warnings;
-use feature 'say';
 use Getopt::Long;
 use File::Basename;
 use Text::CSV;
+use 5.18.0;
 
-our $script = basename $0;
-our $script_version = "1.0";
+my $script = basename $0;
+my $script_version = "1.0";
 
-my $usage = "usage: $script [--help] --file FILE [--exclude] [PACKAGE ...]
-required arguments:
-	--file		path to csv file
-optional arguments:
-	--help		show this help message and exit
-	--exclude	seperated package names to exclude
-";
+my $sep = "-" x 40;
 
-&main();
+my $usage = <<EOQ;
+Usage: $script [--help] --file FILE [--exclude] [PACKAGE ...]
+	
+Required arguments:
+		--file		path to csv file
+Optional arguments:
+		--help		show this help message and exit
+		--exclude	seperated package names to exclude
+EOQ
+
+my $verion = "";
+my $help = "";
 
 my $csv_file = "";
 my @exclude = "";
 
 sub main {
-	GetOptions("file=s" => \$csv_file, "exclude=s{1,}" => \@exclude);
-
+	my $ok = GetOptions(
+		"file=s" => \$csv_file,
+		"exclude=s{1,}" => \@exclude,
+		"help" => \$help);
+	
+	if ($help || !$ok) {
+		print $usage;
+		exit;
+	}
+	
 	say "Start installing packages from $csv_file";
 	
 	my $num_lines = &get_num_lines(file=>$csv_file);
 	say "Found $num_lines package(s) in file";
-	my $num_excludes = @exclude;
+	my $num_excludes = @exclude - 1;
 	say "Exclude $num_excludes package(s) => @exclude" if (@exclude);
 
 	my @packages;
@@ -42,7 +55,7 @@ sub main {
 	while (my $row = $csv->getline($fh)) {
 		my $package_name = $row->[0];
 		my $package_repo = $row->[1];
-		if (!($package_name ~~ @exclude)) {
+		if (!(grep(/^$package_name$/, @exclude))) {
 			my $package = { "name" => $package_name };
 			if ($package_repo) {
 				$package->{"repo"} = $package_repo;
@@ -62,7 +75,7 @@ sub get_num_lines() {
 	my %args = @_;
 	my $file = $args{file} || die 'file=> parameter requiered';
 	my $wc_out = qx(wc -l < $file);
-	$wc_out =~ /(^\d{1,})/; 
+	$wc_out =~ /(^\d{1,})/;
 	return $1;
 }
 
@@ -72,12 +85,12 @@ sub install_packages() {
 	my @err_installed;
 
 	for (@$packages) {
-		say "$_";
 		my $p_name = $_->{name};
 		my $p_repo = $_->{repo};
 		
 		say "Processing package: $p_name";
-		
+		say $sep;
+
 		my $err = 0;
 		
 		if ($p_repo) {
@@ -91,6 +104,8 @@ sub install_packages() {
 		if ($err) {
 			push(@err_installed, $p_name);
 		}
+		
+		say $sep;
 	}
 	say "Complete!";
 	
@@ -103,12 +118,4 @@ sub install_packages() {
 	say "\tNot installed: $num_not_installed packages(s) => @err_installed" if (@err_installed);
 }
 
-sub usage {
-	print $usage;
-	exit;
-}
-
-sub version {
-	print "$script version $script_version\n";
-	exit;
-}
+&main();
