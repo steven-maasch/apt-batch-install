@@ -1,5 +1,6 @@
 #!/usr/bin/perl -w
 
+use utf8;
 use strict;
 use warnings;
 use feature 'say';
@@ -7,13 +8,14 @@ use Getopt::Long;
 use File::Basename;
 use Text::CSV;
 
-my $script = basename $0;
-my $script_version = "0.0.1";
+our $script = basename $0;
+our $script_version = "1.0";
 
-my $usage = "usage: $script --file file [--exclude] [package ...]
+my $usage = "usage: $script [--help] --file FILE [--exclude] [PACKAGE ...]
 required arguments:
 	--file		path to csv file
 optional arguments:
+	--help		show this help message and exit
 	--exclude	seperated package names to exclude
 ";
 
@@ -22,23 +24,7 @@ optional arguments:
 my $csv_file = "";
 my @exclude = "";
 
-sub get_num_lines() {
-	my %args = @_;
-	my $file = $args{file} || die 'file=> parameter requierd';
-	my $wc_out = qx(wc -l < $file); # line number without filename
-	$wc_out =~ /(^\d{1,})/; 
-	return $1;
-}
-
-sub install_package() {
-	my %args = @_;
-	my $package= $args{package} || die 'package=> parameter requierd';
-	my $cmd_install = qx(apt-get install -y $package);
-}
-	
-	
 sub main {
-
 	GetOptions("file=s" => \$csv_file, "exclude=s{1,}" => \@exclude);
 
 	say "Start installing packages from $csv_file";
@@ -46,7 +32,7 @@ sub main {
 	my $num_lines = &get_num_lines(file=>$csv_file);
 	say "Found $num_lines package(s) in file";
 	my $num_excludes = @exclude;
-	say "Exclude $num_excludes package(s): " . join(", ", @exclude);
+	say "Exclude $num_excludes package(s) => @exclude" if (@exclude);
 
 	my @packages;
 	my $csv = Text::CSV->new({ binary => 1 }) or 
@@ -67,20 +53,54 @@ sub main {
 
 	$csv->eof or $csv->error_dialog();
 	close $fh;
-	
-	
-	for (@packages) {
-		my $p_name = $_->{name};
-		say "Processing package: $p_name";
-		&install_package(package=>$p_name);
-	}
 
-	if ($? == -1) {
-		print "command failed: $!\n";
-	} else {
-		print "Successfuly installed package ..";
-		printf "command exited with value %d\n", $? >> 8;
+	&install_packages(packages=>\@packages);
+
+}
+
+sub get_num_lines() {
+	my %args = @_;
+	my $file = $args{file} || die 'file=> parameter requiered';
+	my $wc_out = qx(wc -l < $file);
+	$wc_out =~ /(^\d{1,})/; 
+	return $1;
+}
+
+sub install_packages() {
+	my %args = @_;
+	my $packages = $args{packages} || die 'packages=> paramter required';
+	my @err_installed;
+
+	for (@$packages) {
+		say "$_";
+		my $p_name = $_->{name};
+		my $p_repo = $_->{repo};
+		
+		say "Processing package: $p_name";
+		
+		my $err = 0;
+		
+		if ($p_repo) {
+			system("add-apt-repository", "-y", $p_repo) == 0 or $err = 1;
+			system("apt-get", "update") unless ($err);
+			$err = 1 if ($?);
+		}
+		system("apt-get", "install", "-y", $p_name) unless $err;
+		$err = 1 if ($?);
+		
+		if ($err) {
+			push(@err_installed, $p_name);
+		}
 	}
+	say "Complete!";
+	
+	my $num_total = @$packages;
+	my $num_installed = @$packages - @err_installed;
+	my $num_not_installed = @err_installed;
+	say "Summery:";
+	say "\tTotal: $num_total package(s)";
+	say "\tInstalled: $num_installed package(s)";
+	say "\tNot installed: $num_not_installed packages(s) => @err_installed" if (@err_installed);
 }
 
 sub usage {
