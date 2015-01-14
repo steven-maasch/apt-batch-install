@@ -11,7 +11,7 @@ apt-batch-install.pl --file FILE [--exclude] [PACKAGE ...]
 required arguments:
 	--file		path to csv file
 optional arguments:
-	--exclude	seperated package names to exclude
+	--exclude	seperated package names to exclude (not installing)
 ```
 
 The CSV-File contains the following information:
@@ -22,7 +22,7 @@ The Repository-URL may be omitted.
 
 #### Example usage
 ```bash
-$ sudo ./apt-batch-install.pl --file packages.csv -- exclude arj texlive-full
+$ sudo ./apt-batch-install.pl --file packages.csv -- exclude hplip texlive-full
 ```
 
 #### Requirements
