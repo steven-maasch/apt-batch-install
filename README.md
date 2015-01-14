@@ -1,19 +1,31 @@
 apt-batch-install
 ============
 
-Python script that batch installs apt-packages based on csv file(s).
+Perl script that batch installs apt-packages based on a csv file.
 
-##### Usage
+#### Usage
 
 ```bash
-$ sudo ./auto-install.py packages.csv
+apt-batch-install.pl --file FILE [--exclude] [PACKAGE ...]
+
+required arguments:
+	--file		path to csv file
+optional arguments:
+	--exclude	seperated package names to exclude
 ```
+
 The CSV-File contains the following information:
 + Column 1 : Package Name
 + Column 2 : Repository-URL (PPA)
 
 The Repository-URL may be omitted.
 
-##### Requirements
+#### Examples
+```bash
+$ sudo ./apt-batch-install.pl --file packages.csv -- exclude arj texlive-full
+```
 
-+ Python 3
+#### Requirements
+
++ Perl 5
++ Text::CSV (CPAN)
