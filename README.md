@@ -1,7 +1,7 @@
 apt-batch-install
 ============
 
-Perl script that batch installs apt-packages based on a csv file.
+My first Perl script that batch installs apt-packages based on a csv file.
 
 #### Usage
 
@@ -20,7 +20,7 @@ The CSV-File contains the following information:
 
 The Repository-URL may be omitted.
 
-#### Examples
+#### Example usage
 ```bash
 $ sudo ./apt-batch-install.pl --file packages.csv -- exclude arj texlive-full
 ```
