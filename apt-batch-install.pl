@@ -11,7 +11,7 @@ use 5.18.0;
 my $script = basename $0;
 my $script_version = "1.0";
 
-my $sep = "-" x 40;
+my $sep = "-" x 80;
 
 my $usage = <<EOQ;
 Usage: $script [--help] --file FILE [--exclude] [PACKAGE ...]
@@ -41,11 +41,11 @@ sub main {
 	}
 	
 	say "Start installing packages from $csv_file";
+	say "Found " . &count_lines(file=>$csv_file) . " package(s) in file";
 	
-	my $num_lines = &get_num_lines(file=>$csv_file);
-	say "Found $num_lines package(s) in file";
-	my $num_excludes = @exclude - 1;
-	say "Exclude $num_excludes package(s) => @exclude" if (@exclude);
+	if (@exclude) {
+		say "Exclude " . scalar @exclude . " package(s) => @exclude";
+	}
 
 	my @packages;
 	my $csv = Text::CSV->new({ binary => 1 }) or 
@@ -71,7 +71,7 @@ sub main {
 
 }
 
-sub get_num_lines() {
+sub count_lines() {
 	my %args = @_;
 	my $file = $args{file} || die 'file=> parameter requiered';
 	my $wc_out = qx(wc -l < $file);
@@ -110,12 +110,15 @@ sub install_packages() {
 	say "Complete!";
 	
 	my $num_total = @$packages;
-	my $num_installed = @$packages - @err_installed;
+	my $num_installed = $num_total - @err_installed;
 	my $num_not_installed = @err_installed;
 	say "Summery:";
 	say "\tTotal: $num_total package(s)";
 	say "\tInstalled: $num_installed package(s)";
-	say "\tNot installed: $num_not_installed packages(s) => @err_installed" if (@err_installed);
+	if (@err_installed) {
+		say "\tNot installed: $num_not_installed packages(s) => @err_installed";
+	}
 }
+
 
 &main();
