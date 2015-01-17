@@ -73,7 +73,7 @@ sub count_lines() {
 	my %args = @_;
 	my $file = $args{file} || die 'file=> parameter requiered';
 	my $wc_out = qx(wc -l < $file);
-	$wc_out =~ /(^\d{1,})/;
+	$wc_out =~ /(^\d+)/;
 	return $1;
 }
 
@@ -93,16 +93,19 @@ sub install_packages() {
 		
 		if ($p_repo) {
 			# Add repo
-			system("add-apt-repository", "-y", $p_repo) == 0 or $err = 1;
+			system("add-apt-repository", "-y", $p_repo) == 0 or
+				$err = 1;
 			if (!$err) {
 				# Update package index
-				system("apt-get", "update") == 0 or $err = 1;	
+				system("apt-get", "update") == 0 or
+					$err = 1;	
 			}
 		}
 
 		if (!$err) {
 			# Install package
-			system("apt-get", "install", "-y", $p_name) == 0 or $err = 1;
+			system("apt-get", "install", "-y", $p_name) == 0 or
+				$err = 1;
 		}
 
 		if ($err) {
