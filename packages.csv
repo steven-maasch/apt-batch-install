@@ -42,6 +42,7 @@ virtualbox-qt,
 vlc,ppa:videolan/stable-daily
 vorbis-tools,
 wavpack,
+wipe,
 xfonts-terminus,
 youtube-dl,
 zip,
