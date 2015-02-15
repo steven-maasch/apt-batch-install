@@ -13,6 +13,7 @@ flac,
 gedit,
 gedit-plugins,
 gimp,
+grub-customizer,ppa:danielrichter2007/grub-customizer
 hplip,
 hplip-gui,
 htop,
