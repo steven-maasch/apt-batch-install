@@ -29,6 +29,7 @@ secure-delete,
 smartmontools,
 stress,
 synaptic,
+testdisk,
 thunderbird,
 tmux,ppa:pi-rho/dev
 tree,
