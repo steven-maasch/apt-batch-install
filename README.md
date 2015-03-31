@@ -22,7 +22,7 @@ The Repository-URL may be omitted.
 
 #### Example usage
 ```bash
-$ sudo ./apt-batch-install.pl --file packages.csv -- exclude hplip texlive-full
+$ sudo ./apt-batch-install.pl --file packages.csv --exclude hplip texlive-full
 ```
 
 #### Requirements
